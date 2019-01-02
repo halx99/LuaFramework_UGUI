@@ -199,6 +199,7 @@ local CoUpdateBeat = CoUpdateBeat
 
 --逻辑update
 function Update(deltaTime, unscaledDeltaTime)
+    global_update(deltaTime)
 	Time:SetDeltaTime(deltaTime, unscaledDeltaTime)				
 	UpdateBeat()	
 end
