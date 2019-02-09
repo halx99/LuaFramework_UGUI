@@ -250,8 +250,8 @@ namespace LuaInterface
         [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern int luaopen_cjson_safe(IntPtr L);
 
-        [DllImport("masio", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int luaopen_masio(IntPtr L);
+        [DllImport("lyasio", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int luaopen_yasio(IntPtr L);
 
         /*
          ** pseudo-indices

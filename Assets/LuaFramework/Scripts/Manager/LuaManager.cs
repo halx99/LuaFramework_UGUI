@@ -62,7 +62,7 @@ namespace LuaFramework {
             lua.OpenLibs(LuaDLL.luaopen_lpeg);
             lua.OpenLibs(LuaDLL.luaopen_bit);
             lua.OpenLibs(LuaDLL.luaopen_socket_core);
-            lua.OpenLibs(LuaDLL.luaopen_masio);
+            lua.OpenLibs(LuaDLL.luaopen_yasio);
 
             this.OpenCJson();
         }

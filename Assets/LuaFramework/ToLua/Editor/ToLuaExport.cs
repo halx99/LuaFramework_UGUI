@@ -3667,6 +3667,16 @@ public static class ToLuaExport
     {
         object[] attrs = mb.GetCustomAttributes(true);
 
+        // Fix Unity3d 2018.3f
+        if (mb.Name == "streamingMipmapsRenderersPerFrame")
+        { // Fix Assets\LuaFramework\ToLua\Source\Generate\UnityEngine_QualitySettingsWrap.cs(1107,4): error CS0200: Property or indexer 'QualitySettings.streamingMipmapsRenderersPerFrame' cannot be assigned to -- it is read only
+            return true;
+        }
+        else if (mb.Name == "SetLightDirty")
+        { // Fix Assets\LuaFramework\ToLua\Source\Generate\UnityEngine_LightWrap.cs(95,8): error CS1061: 'Light' does not contain a definition for 'SetLightDirty' and no accessible extension method 'SetLightDirty' accepting a first argument of type 'Light' could be found (are you missing a using directive or an assembly reference?)
+            return true;
+        }
+
         for (int j = 0; j < attrs.Length; j++)
         {
             Type t = attrs[j].GetType() ;            
