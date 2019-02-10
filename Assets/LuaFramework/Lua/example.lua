@@ -21,8 +21,8 @@ local data_partial2 = nil
 server:start_service(hostents, function(event)
         local t = event:kind()
         if t == yasio.YASIO_EVENT_RECV_PACKET then
-            local packet = event:packet()
-            print(packet)
+            local packet = event:take_packet()
+            print(packet:to_string())
         elseif(t == yasio.YASIO_EVENT_CONNECT_RESPONSE) then -- connect responseType
             if(event:status() == 0) then
                 local transport = event:transport()
@@ -68,7 +68,7 @@ client:set_option(yasio.YASIO_OPT_LFIB_PARAMS,
 client:start_service(hostent, function(event)
     local t = event:kind()
     if t == yasio.YASIO_EVENT_RECV_PACKET then
-        local ibs = event:packet()
+        local ibs = event:take_packet()
         local msg = proto.d101(ibs)
         print(string.format('receve data from server: %s', msg.passwd))
         stopFlag = stopFlag + 1
@@ -98,9 +98,8 @@ httpclient:set_option(yasio.YASIO_OPT_LFIB_PARAMS, 65535, -1, 0, 0)
 httpclient:start_service(hostent, function(event)
         local t = event:kind()
         if t == yasio.YASIO_EVENT_RECV_PACKET then
-            local ibs = event:packet()
+            local ibs = event:take_packet()
             print(string.format('receve data from server: %s', ibs:to_string()))
-            -- print(packet)
         elseif(t == yasio.YASIO_EVENT_CONNECT_RESPONSE) then -- connect responseType
             if(event:status() == 0) then
                 local transport = event:transport()
