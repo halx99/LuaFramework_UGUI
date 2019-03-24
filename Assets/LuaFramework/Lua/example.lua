@@ -1,3 +1,4 @@
+-- yasio 3.9.11 demo
 require 'protocol_base'
 require 'protocol_enc'
 require 'protocol_dec'
@@ -20,10 +21,8 @@ local transport1 = nil
 local data_partial2 = nil
 server:start_service(hostents, function(event)
         local t = event:kind()
-        if t == yasio.YASIO_EVENT_RECV_PACKET then
-            local packet = event:take_packet()
-            print(packet:to_string())
-        elseif(t == yasio.YASIO_EVENT_CONNECT_RESPONSE) then -- connect responseType
+        if t == yasio.YEK_PACKET then
+        elseif(t == yasio.YEK_CONNECT_RESPONSE) then -- connect responseType
             if(event:status() == 0) then
                 local transport = event:transport()
                 -- local requestData = "GET /index.htm HTTP/1.1\r\nHost: www.ip138.com\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36\r\nAccept: */*;q=0.8\r\nConnection: Close\r\n\r\n"
@@ -48,17 +47,17 @@ server:start_service(hostents, function(event)
             else
                 print("connect server failed!")
             end
-        elseif(t == yasio.YASIO_EVENT_CONNECTION_LOST) then -- connection lost event
+        elseif(t == yasio.YEK_CONNECTION_LOST) then -- connection lost event
             print("The connection is lost!")
         end
     end)
-server:open(0, yasio.CHANNEL_TCP_SERVER)
-server:open(1, yasio.CHANNEL_TCP_SERVER)
+server:open(0, yasio.YCM_TCP_SERVER)
+server:open(1, yasio.YCM_TCP_SERVER)
 
 local client = io_service.new()
 hostent.host = "127.0.0.1"
 --tcp unpack params, TCP拆包参数设置接口:
-client:set_option(yasio.YASIO_OPT_LFIB_PARAMS, 
+client:set_option(yasio.YOPT_LFBFD_PARAMS, 
     65535, -- maxFrameLength, 最大包长度
     0,  -- lenghtFieldOffset, 长度字段偏移，相对于包起始字节
     4, -- lengthFieldLength, 长度字段大小，支持1字节，2字节，3字节，4字节
@@ -67,7 +66,7 @@ client:set_option(yasio.YASIO_OPT_LFIB_PARAMS,
 
 client:start_service(hostent, function(event)
     local t = event:kind()
-    if t == yasio.YASIO_EVENT_RECV_PACKET then
+    if t == yasio.YEK_PACKET then
         local ibs = event:take_packet()
         local msg = proto.d101(ibs)
         print(string.format('receve data from server: %s', msg.passwd))
@@ -75,32 +74,32 @@ client:start_service(hostent, function(event)
         -- test buffer out_of_range exception handler
         local _, result = pcall(ibs.read_i8, ibs)
         print(result)
-    elseif(t == yasio.YASIO_EVENT_CONNECT_RESPONSE) then -- connect responseType
+    elseif(t == yasio.YEK_CONNECT_RESPONSE) then -- connect responseType
         if(event:status() == 0) then
-            print("connect serve succeed.")
+            print("connect server succeed.")
             -- local transport = event:transport()
             -- local requestData = "GET /index.htm HTTP/1.1\r\nHost: www.ip138.com\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36\r\nAccept: */*;q=0.8\r\nConnection: Close\r\n\r\n"
             -- client:write(transport, obs)
         else
             print("connect server failed!")
         end
-    elseif(t == yasio.YASIO_EVENT_CONNECTION_LOST) then -- connection lost event
+    elseif(t == yasio.YEK_CONNECTION_LOST) then -- connection lost event
         print("The connection is lost!")
     end
 end)
-client:open(0, yasio.CHANNEL_TCP_CLIENT)
+client:open(0, yasio.YCM_TCP_CLIENT)
 
 -- httpclient
 local httpclient = io_service.new()
 hostent.host = "ip138.com"
 hostent.port = 80
-httpclient:set_option(yasio.YASIO_OPT_LFIB_PARAMS, 65535, -1, 0, 0)
 httpclient:start_service(hostent, function(event)
         local t = event:kind()
-        if t == yasio.YASIO_EVENT_RECV_PACKET then
+        if t == yasio.YEK_PACKET then
             local ibs = event:take_packet()
             print(string.format('receve data from server: %s', ibs:to_string()))
-        elseif(t == yasio.YASIO_EVENT_CONNECT_RESPONSE) then -- connect responseType
+            
+        elseif(t == yasio.YEK_CONNECT_RESPONSE) then -- connect responseType
             if(event:status() == 0) then
                 local transport = event:transport()
                 local requestData = "GET /index.htm HTTP/1.1\r\nHost: www.ip138.com\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36\r\nAccept: */*;q=0.8\r\nConnection: Close\r\n\r\n"
@@ -108,27 +107,36 @@ httpclient:start_service(hostent, function(event)
             else
                 print("connect server failed!")
             end
-        elseif(t == yasio.YASIO_EVENT_CONNECTION_LOST) then -- connection lost event
+        elseif(t == yasio.YEK_CONNECTION_LOST) then -- connection lost event
             print("The http connection is lost!")
             stopFlag = stopFlag + 1
         end
-end)
-httpclient:open(0, yasio.CHANNEL_TCP_CLIENT)    
+    end)
+httpclient:set_option(yasio.YOPT_LFBFD_PARAMS, 65535, -1, 0, 0)
+httpclient:set_option(yasio.YOPT_CHANNEL_LOCAL_PORT, 0, 36253)
+httpclient:open(0, yasio.YCM_TCP_CLIENT)    
 
 local elapsedTime = 0
 local partial2Sent = false
-function global_update(dt)
+    
+local function yasio_update(dt)
     server:dispatch_events(128)
     client:dispatch_events(128)
     httpclient:dispatch_events(128)
     elapsedTime = elapsedTime + dt
     if elapsedTime > 6 and not partial2Sent then
         partial2Sent = true
-        if(transport1) then
-            server:write(transport1, data_partial2)
-        end
+        server:write(transport1, data_partial2)
     end
     return stopFlag >= 2
 end
 
+if(yasio.loop) then
+    yasio.loop(-1, 0.01, function()
+        yasio_update(0.01)
+    end)
+end
+
 print('done')
+
+return yasio_update
