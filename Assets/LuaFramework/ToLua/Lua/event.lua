@@ -197,9 +197,11 @@ local LateUpdateBeat = LateUpdateBeat
 local FixedUpdateBeat = FixedUpdateBeat
 local CoUpdateBeat = CoUpdateBeat
 
+local yasio_update = require 'example'
+
 --逻辑update
 function Update(deltaTime, unscaledDeltaTime)
-    global_update(deltaTime)
+    yasio_update(deltaTime)
 	Time:SetDeltaTime(deltaTime, unscaledDeltaTime)				
 	UpdateBeat()	
 end
